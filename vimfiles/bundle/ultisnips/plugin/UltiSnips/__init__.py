@@ -966,7 +966,7 @@ class SnippetManager(object):
         elif existing:
             edit = existing[-1] # last sourced/highest priority
         else:
-            home = "/Users/xxiao/Tools/vim/vimfiles/bundle/ultisnips"
+            home = "/Users/xiangyang_xiao/Tools/vim/vimfiles/bundle/ultisnips"
             snippet_dirs = ["UltiSnips"] + _vim.eval("g:UltiSnipsSnippetDirectories")
             us = snippet_dirs[-1]
 

@@ -23,9 +23,9 @@ set cindent
 set autoindent
 set smarttab
 set expandtab
-set tabstop=4
+set tabstop=2
 set shiftwidth=4 
-set softtabstop=4
+set softtabstop=2
 " Visual
 set showmatch  " Show matching brackets.
 set mat=5  " Bracket blinking.
@@ -98,3 +98,22 @@ nnoremap <esc> :noh<CR><esc>
 set undofile
 set undodir=$HOME/Tools/vim/tempDir
 set undolevels=999 "maximum number of changes that can be undone
+
+au BufWinEnter,BufNewFile * silent tab
+highlight ExtraWhitespace ctermbg=red guibg=red
+match ExtraWhitespace /\s\+$/
+autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
+autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
+autocmd InsertLeave * match ExtraWhitespace /\s\+$/
+autocmd BufWinLeave * call clearmatches()
+set encoding=utf-8
+set diffopt+=iwhite
+let g:fugitive_github_domains = ['github.com', 'git.airbnb.com']
+
+"remove the crontab conflict
+autocmd filetype crontab setlocal nobackup nowritebackup
+
+nnoremap ]q :cnext <CR>
+nnoremap [q :cprev <CR>
+nnoremap [Q :cfirst <CR>
+nnoremap ]Q :clast <CR>
