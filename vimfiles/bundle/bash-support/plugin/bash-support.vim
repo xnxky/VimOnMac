@@ -2423,7 +2423,7 @@ function! BASH_Run ( mode )
 				setlocal buftype=nofile
 				setlocal syntax=none
 				setlocal bufhidden=delete
-				setlocal tabstop=8
+				setlocal tabstop=2
 			endif
 			"
 			" run script

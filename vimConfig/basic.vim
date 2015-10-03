@@ -24,7 +24,6 @@ set autoindent
 set smarttab
 set expandtab
 set tabstop=2
-set shiftwidth=4 
 set softtabstop=2
 " Visual
 set showmatch  " Show matching brackets.
@@ -38,7 +37,6 @@ set laststatus=2  " Always show status line.
  
 "set autochdir
 set autochdir
-
 
 " gvim specific
 set mousehide  " Hide mouse after chars typed
