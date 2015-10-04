@@ -2,7 +2,7 @@
 " let g:pep8_map='whatever'
 " in your .vimrc
 " To change theocolor of
-let g:pep8_map = '<leader>8'
+let g:pep8_map = '<leader>88'
  
 function! <SID>Pep8()
   set lazyredraw
