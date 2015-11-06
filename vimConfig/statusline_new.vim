@@ -33,3 +33,6 @@ function! AccentDemo()
 endfunction
 
 autocmd VimEnter * call AccentDemo()
+
+" Just show the filename (no path) in the tab
+let g:airline#extensions#tabline#fnamemod = ':t'
