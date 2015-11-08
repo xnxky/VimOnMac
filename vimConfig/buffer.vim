@@ -7,7 +7,7 @@
 noremap <silent> <C-p> :bp <cr>
 noremap <silent> <C-n> :bn <cr> 
 noremap <silent> <C-f> :bf <cr> 
-noremap <silent> <C-l> :bl <cr> 
+noremap <silent> <C-e> :bl <cr> 
 " MiniBufExpl Colors
 hi MBEVisibleActive guifg=#A6DB29 guibg=#000000
 hi MBEVisibleChangedActive guifg=#F1266F guibg=#000000
