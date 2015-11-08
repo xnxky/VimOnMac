@@ -108,8 +108,3 @@ let g:fugitive_github_domains = ['github.com', 'git.airbnb.com']
 
 "remove the crontab conflict
 autocmd filetype crontab setlocal nobackup nowritebackup
-
-nnoremap ]q :cnext <CR>
-nnoremap [q :cprev <CR>
-nnoremap [Q :cfirst <CR>
-nnoremap ]Q :clast <CR>
