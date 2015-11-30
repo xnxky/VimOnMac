@@ -159,7 +159,7 @@ nnoremap <silent> # :if !<sid>SearchNext("b")<bar>execute "norm! #"<bar>endif<cr
 
 command! -nargs=? Mark call s:DoMark(<f-args>)
 
-autocmd! BufWinEnter * call s:UpdateMark()
+autocmd BufWinEnter * call s:UpdateMark()
 
 " Functions
 
