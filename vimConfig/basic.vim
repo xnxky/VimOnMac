@@ -1,7 +1,7 @@
 set nocompatible
 let mapleader = ','
 behave mswin
-
+set diffopt=filler,context:0
 set cf  " Enable error files & error jumping.
 set clipboard=unnamed
 set history=256  " Number of things to remember in history.
@@ -108,3 +108,4 @@ let g:fugitive_github_domains = ['github.com', 'git.airbnb.com']
 
 "remove the crontab conflict
 autocmd filetype crontab setlocal nobackup nowritebackup
+autocmd BufNewFile,BufRead *.json set ft=javascript
