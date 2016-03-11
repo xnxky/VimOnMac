@@ -1,6 +1,5 @@
 set nocompatible
 let mapleader = ','
-behave mswin
 set diffopt=filler,context:0
 set cf  " Enable error files & error jumping.
 set clipboard=unnamed
