@@ -48,6 +48,14 @@ ARR_R = '\x1bOC'
 ARR_U = '\x1bOA'
 ARR_D = '\x1bOB'
 
+def testq(arg1):
+  """@todo: Docstring for testq
+
+  :arg1: @todo
+  :returns: @todo
+
+  """
+  pass
 # multi-key sequences generating a single key press
 SEQUENCES = [ARR_L, ARR_R, ARR_U, ARR_D]
 
