@@ -108,3 +108,7 @@ let g:fugitive_github_domains = ['github.com', 'git.airbnb.com']
 "remove the crontab conflict
 autocmd filetype crontab setlocal nobackup nowritebackup
 autocmd BufNewFile,BufRead *.json set ft=javascript
+
+"see https://github.com/elzr/vim-json/issues/23#issuecomment-40293049
+"about indentLine issue on json concealing
+let g:indentLine_noConcealCursor=""

@@ -1,5 +1,5 @@
 "Folding Option, if noremap is used, this onw won't work
-set foldmethod=manual
+set foldmethod=syntax
 let html_dynamic_folds=1
 "let html_number_lines=0
 "unlet html_number_lines
