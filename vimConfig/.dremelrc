@@ -1,0 +1,121 @@
+SET accounting_group gmail-sad;
+# Most commonly used macros ($cnt, $rcpt_cnt etc.)
+SOURCE /home/build/google3/experimental/cboosad/spam/dremel/ops.dremel
+# Useful miscellaneous Dremel macros
+SOURCE /home/build/google3/experimental/cboosad/spam/dremel/misc.sql
+# feature_name, feature_id, and Base64 functions
+# LOAD /home/build/google3/experimental/cboosad/spam/dremel/dremel.szl
+# Identify IPaddresses within a given range
+# LOAD /home/build/google3/experimental/cboosad/spam/dremel/ip_range.szl
+# Get reputations (UDF)
+# LOAD /home/build/google3/experimental/cboosad/spam/dremel/externalfeature.szl
+# Mapping for Stats.AntiVirusStat.Status in the AV logs
+# LOAD /home/build/google3/experimental/cboosad/spam/dremel/av_status.szl
+# Reading large numbers is hard!
+# LOAD /home/build/google3/experimental/cboosad/spam/dremel/number_output_formats.szl
+# Working with Neptune data.
+SOURCE /home/build/google3/experimental/cboosad/spam/dremel/neptune.dremel
+
+# These should be copied into ~/.dremelrc, which is loaded when you run "dremel" from the command prompt
+
+# Notes:
+## According to event_log.cc, if SpuriousNotSpamMarking is true then ManualMarkingFromSuspiciousUser will also be true, thus Spurious not needed
+
+
+##############################
+# Seti Model Comparison Macros
+
+# Run this in your dremel prompt in order to avoid "Invalid function name: B64DECODE"
+load /google/src/head/depot/google3/experimental/cboosad/spam/dremel/base64.lua
+
+
+# We use this for FalseNegative/FalsePositive calculations to exclude certain messages
+# ... AND $fp_fn_exclusion
+define macro fp_fn_exclusion NOT b64decode(subject) contains "Delivery Status Notification" # only if the classifier is manual, short circuit this TODO
+  AND NOT (ManualMarkingFromSuspiciousUser
+    OR classificationresponse.policyreason IN (266, # HOSTED_IP_WHITELIST
+                                               748, # DOMAIN_DATA_IP_WHITELIST
+                                               21)  # IP_WHITELIST
+    OR IsManualMarkingDiscarded
+    OR classificationsourceui='SOURCE_IMAP');
+# This set is small (15,048,759 of 17,968,625,781, .08%), maybe just ignore this
+# Vijay says this is high for manual markings so get more stats before excluding this.
+
+
+# ^os maillabel means originally sent to spam folder, used for tracking manual mail reclassification.
+# AND [NOT] $original_to_spamfolder" to exclude marking flips
+define macro original_to_spamfolder REGEXP(maillabels, r'(\s|^)\^os(\W|$)');
+# Can short circuit this,  Check if empty first (most will be)
+
+# Made it through classification without hitting reason, not marked as spam but valid for reclassification later
+define macro default_classified ClassificationResponse.PolicyReason > 9000;
+# "classifier='tree' AND NOT isspam AND default_classified" means made it through all processing without getting a real classification
+
+# If only one active reason, can be sure that reason is the cause of the classification.
+# If multiple reasons, can't use the record to calculate incremental coverage.
+define macro single_reason SUM(ClassificationResponse.Reasons.Active AND ClassificationResponse.Reasons.Policy=1)=1 WITHIN RECORD;
+
+
+
+# If a SETI_SCORE reason said IsSpam, then seti_live_positive is true, otherwise false.  Different macros depending on which tags we are considering.
+
+# When comparing two live models, use seti_live_positive_full to account for every active Seti reason.
+# We are assuming the same features are active between live models (can't make this assumption with dark).
+define macro seti_live_positive_full MAX(if(ClassificationResponse.Reasons.FeatureId=43, # SETI_SCORE
+       ClassificationResponse.Reasons.IsSpam AND classificationresponse.reasons.active,
+       FALSE)) WITHIN RECORD;
+
+# When comparing a live model to a 0.1% dark model, use seti_live_positive_one for just the most significant reason
+# This is because the dark model is only activated on the most significant reason, so this keeps the comparison of live to dark fair.
+define macro seti_live_positive_one MAX(if(ClassificationResponse.Reasons.FeatureId=43, # SETI_SCORE
+       ClassificationResponse.Reasons.IsSpam AND ClassificationResponse.Reasons.tag="",
+       FALSE)) WITHIN RECORD;
+
+# Live Seti model didn't tag the message (except for a tag that we ignore)
+# +seti_whitelist_exp tag is being added by classifier but is never active.  Pull from classifier, then pull from query.
+define macro seti_live_negative SUM(classificationresponse.reasons.featureid=43
+      AND NOT classificationresponse.reasons.tag = "+seti_whitelist_exp")=0 WITHIN RECORD;
+
+
+define macro seti_dark_positive_full MAX(if(ClassificationResponse.Reasons.FeatureId=392, # SETI_EXPERIMENTAL_SCORE
+        ClassificationResponse.Reasons.IsSpam,
+        FALSE)) WITHIN RECORD;
+
+# Don't care if model active, used to compare which messages are tagged by dark model (i.e. not checking FN/FP)
+define macro seti_dark_positive_one MAX(if(ClassificationResponse.Reasons.FeatureId=392, # SETI_EXPERIMENTAL_SCORE
+        ClassificationResponse.Reasons.IsSpam AND classificationresponse.reasons.tag="+seti_exp",
+        FALSE)) WITHIN RECORD;
+
+# We check reasons.active here because this should only be used when comparing an active dark with an active live Seti model (FN/FP comparison)
+define macro seti_dark_positive_active MAX(if(ClassificationResponse.Reasons.FeatureId=392, # SETI_EXPERIMENTAL_SCORE
+        ClassificationResponse.Reasons.IsSpam AND classificationresponse.reasons.tag="+seti_exp" AND classificationresponse.reasons.active,
+        FALSE)) WITHIN RECORD;
+
+# Dark Seti model didn't tag the message (except for a tag that we ignore)
+define macro seti_dark_negative SUM(classificationresponse.reasons.featureid=392)=0 WITHIN RECORD;
+
+
+# SELECT COUNT(*) false_positives FROM ... WHERE $is_false_positive
+define macro is_false_positive classifier='manual'
+  AND NOT isspam
+  AND $fp_fn_exclusion
+  AND $original_to_spamfolder;
+
+# SELECT COUNT(*) false_negatives FROM ... WHERE $is_false_negative
+define macro is_false_negative classifier='manual'
+  AND isspam
+  AND $fp_fn_exclusion
+  AND NOT $original_to_spamfolder;
+
+define macro reputation if(AuthDkCrowdReputation >= 0.0,
+       AuthDkCrowdReputation / 100.0,
+       if(AuthSpfCrowdReputation >= 0.0,
+          AuthSpfCrowdReputation / 100.0,
+          if(AuthenticatedDkDomain!='' OR AuthenticatedSpfResultPra!='',
+             0.5,
+             0.25)));
+# AuthSpfReputation if CrowdReputation doesn't exist.
+# Use minimum of DK and SPF rep if both present.
+
+# Assuming FalsePositives are 10x as expensive as FalseNegatives.
+define macro fp_cost_multiplier 10;

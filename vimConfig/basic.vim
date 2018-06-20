@@ -50,9 +50,12 @@ set directory=$HOME/Tools/vim/tempDir     " Where temporary files will go.
 set viminfo='100,f1
 
 syntax enable
-set background=dark
+set background=light
 let g:solarized_termcolors=256
-colorscheme solarized
+colorscheme vividchalk
+
+"Disable auto comment insertion in the next line
+autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
 
 ""************************************************************************************'
 "self defined mapping
